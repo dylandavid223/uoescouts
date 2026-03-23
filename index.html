@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELITE CREW | University of Eldoret Scouts</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rye&family=Cabin:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- GSAP for advanced animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <style>
+        :root {
+            --forest-green: #1b4332;
+            --forest-dark: #081c15;
+            --earth-brown: #bc6c25;
+            --earth-light: #dda15e;
+            --rope-tan: #d4a373;
+            --cream: #fefae0;
+            --parchment: #faedcd;
+            --night-blue: #1a1a2e;
+            --badge-gold: #ffd700;
+            --fire-orange: #e85d04;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Cabin', sans-serif;
+            background-color: var(--cream);
+            color: var(--forest-dark);
+            overflow-x: hidden;
+            cursor: crosshair;
+        }
+
+        /* Custom Cursor Compass */
+        .cursor-compass {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--earth-brown);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+        }
+
+        .cursor-compass::before {
+            content: 'N';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Rye', serif;
+            font-size: 10px;
+            color: var(--earth-brown);
+        }
+
+        .cursor-compass::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 15px;
+            background: var(--fire-orange);
+            transform: translate(-50%, -50%);
+        }
+
+        /* Loading Screen - Tent Opening */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--forest-dark);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loader-tent {
+            width: 200px;
+            height: 150px;
+            position: relative;
+        }
+
+        .tent-flap {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--forest-green) 0%, var(--forest-dark) 100%);
+            border: 3px solid var(--rope-tan);
+            transition: transform 2s ease-in-out;
+        }
+
+        .tent-flap.left { left: 0; transform-origin: left; }
+        .tent-flap.right { right: 0; transform-origin: right; }
+
+        .loader.open .tent-flap.left { transform: rotateY(-120deg); }
+        .loader.open .tent-flap.right { transform: rotateY(120deg); }
+
+        .loader-text {
+            color: var(--cream);
+            font-family: 'Rye', serif;
+            margin-top: 20px;
+            font-size: 1.5rem;
+            opacity: 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Rope Border Effect */
+        .rope-border {
+            position: relative;
+            border: 12px solid transparent;
+            border-image: repeating-linear-gradient(
+                45deg,
+                var(--rope-tan),
+                var(--rope-tan) 10px,
+                var(--earth-brown) 10px,
+                var(--earth-brown) 20px
+            ) 12;
+            box-shadow: 
+                0 0 0 4px var(--forest-dark),
+                0 10px 30px rgba(0,0,0,0.3),
+                inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Corner Knots */
+        .knot-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: var(--earth-brown);
+            border-radius: 50%;
+            box-shadow: 
+                inset -3px -3px 5px rgba(0,0,0,0.3),
+                inset 3px 3px 5px rgba(255,255,255,0.3),
+                0 2px 5px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .knot-corner::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.2) 2px,
+                rgba(0,0,0,0.2) 4px
+            );
+            border-radius: 50%;
+        }
+
+        .knot-corner.tl { top: -20px; left: -20px; }
+        .knot-corner.tr { top: -20px; right: -20px; }
+        .knot-corner.bl { bottom: -20px; left: -20px; }
+        .knot-corner.br { bottom: -20px; right: -20px; }
+
+        /* Navigation - Trail Map Style */
+        .nav-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 20px 50px;
+            background: linear-gradient(to bottom, rgba(27,67,50,0.95), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .nav-container.scrolled {
+            background: rgba(27,67,50,0.98);
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-main {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            color: var(--cream);
+        }
+
+        .compass-logo {
+            width: 60px;
+            height: 60px;
+            border: 3px solid var(--badge-gold);
+            border-radius: 50%;
+            position: relative;
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .compass-logo::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid var(--fire-orange);
+        }
+
+        .logo-text {
+            font-family: 'Rye', serif;
+            font-size: 1.8rem;
+            line-height: 1;
+        }
+
+        .logo-text span {
+            display: block;
+            font-size: 0.9rem;
+            font-family: 'Cabin', sans-serif;
+            letter-spacing: 3px;
+            color: var(--earth-light);
+        }
+
+        .trail-nav {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .trail-nav a {
+            color: var(--cream);
+            text-decoration: none;
+            font-weight: 600;
+            position: relative;
+            padding: 10px 20px;
+            transition: all 0.3s;
+            font-family: 'Courier Prime', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .trail-nav a::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -10px;
+            width: 8px;
+            height: 8px;
+            background: var(--earth-brown);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            transition: all 0.3s;
+            box-shadow: 0 0 0 3px rgba(188,108,37,0.3);
+        }
+
+        .trail-nav a:hover::before {
+            background: var(--badge-gold);
+            box-shadow: 0 0 0 6px rgba(255,215,0,0.3);
+        }
+
+        .trail-nav a:hover {
+            color: var(--badge-gold);
+            transform: translateX(5px);
+        }
+
+        /* Hero Section - Basecamp */
+        .hero {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: var(--forest-dark);
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 120%;
+            background: url('https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover;
+            filter: brightness(0.4) sepia(0.3);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: var(--cream);
+            max-width: 900px;
+            padding: 40px;
+        }
+
+        .hero-badge {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, var(--badge-gold), var(--earth-brown));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 10px 40px rgba(0,0,0,0.5),
+                inset 0 0 20px rgba(255,255,255,0.3);
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .hero-badge::before {
+            content: '★';
+            font-size: 80px;
+            color: var(--forest-dark);
+        }
+
+        .hero h1 {
+            font-family: 'Rye', serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 0 var(--forest-dark);
+            line-height: 1;
+        }
+
+        .hero-subtitle {
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.5rem;
+            color: var(--earth-light);
+            margin-bottom: 40px;
+            letter-spacing: 3px;
+        }
+
+        .hero-rope {
+            width: 200px;
+            height: 6px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--rope-tan),
+                var(--rope-tan) 10px,
+                var(--earth-brown) 10px,
+                var(--earth-brown) 20px
+            );
+            margin: 30px auto;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .hero-rope::before,
+        .hero-rope::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: var(--earth-brown);
+            border-radius: 50%;
+        }
+
+        .hero-rope::before { left: -10px; }
+        .hero-rope::after { right: -10px; }
+
+        .btn-scout {
+            display: inline-block;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, var(--earth-brown), var(--fire-orange));
+            color: var(--cream);
+            text-decoration: none;
+            font-family: 'Rye', serif;
+            font-size: 1.2rem;
+            border: 3px solid var(--cream);
+            box-shadow: 
+                0 5px 0 var(--forest-dark),
+                0 10px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            margin: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-scout::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-scout:hover::before {
+            left: 100%;
+        }
+
+        .btn-scout:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 8px 0 var(--forest-dark),
+                0 15px 30px rgba(0,0,0,0.4);
+        }
+
+        .btn-scout:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 2px 0 var(--forest-dark),
+                0 5px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Scroll Indicator - Animated Knife */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            color: var(--cream);
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .knife-icon {
+            width: 30px;
+            height: 60px;
+            position: relative;
+            animation: stab 2s infinite;
+        }
+
+        @keyframes stab {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(10px) rotate(5deg); }
+        }
+
+        /* Section Styling - Parchment Texture */
+        .section {
+            padding: 100px 20px;
+            position: relative;
+        }
+
+        .section-parchment {
+            background: 
+                linear-gradient(to bottom, rgba(250,237,205,0.9), rgba(250,237,205,0.9)),
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23faedcd"/><circle cx="50" cy="50" r="40" fill="none" stroke="%23d4a373" stroke-width="0.5" opacity="0.1"/></svg>');
+            position: relative;
+        }
+
+        .section-forest {
+            background: var(--forest-green);
+            color: var(--cream);
+        }
+
+        .section-forest::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path fill="%231b4332" d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25"/><path fill="%231b4332" d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5"/><path fill="%231b4332" d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"/></svg>');
+            background-size: cover;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-family: 'Rye', serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin-bottom: 15px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--earth-brown),
+                var(--earth-brown) 5px,
+                transparent 5px,
+                transparent 10px
+            );
+        }
+
+        .section-subtitle {
+            font-family: 'Courier Prime', monospace;
+            color: var(--earth-brown);
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+        }
+
+        /* About Section - Badge Collection */
+        .badges-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .scout-badge-card {
+            background: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            transform: rotate(-2deg);
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .scout-badge-card:nth-child(even) {
+            transform: rotate(2deg);
+        }
+
+        .scout-badge-card:hover {
+            transform: rotate(0deg) scale(1.05);
+            z-index: 10;
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .badge-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--forest-green), var(--forest-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: var(--badge-gold);
+            border: 4px solid var(--earth-brown);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tape {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 30px;
+            background: rgba(255,255,255,0.6);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .scout-badge-card h3 {
+            font-family: 'Rye', serif;
+            color: var(--forest-green);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        /* Activities - Trail Map */
+        .trail-map {
+            position: relative;
+            padding: 40px 0;
+        }
+
+        .trail-line {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                var(--earth-brown),
+                var(--earth-brown) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+        }
+
+        .checkpoint {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 60px 0;
+            position: relative;
+        }
+
+        .checkpoint:nth-child(odd) .checkpoint-content {
+            margin-left: auto;
+            margin-right: 55%;
+            text-align: right;
+        }
+
+        .checkpoint:nth-child(even) .checkpoint-content {
+            margin-right: auto;
+            margin-left: 55%;
+            text-align: left;
+        }
+
+        .checkpoint-content {
+            width: 40%;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            position: relative;
+            border: 3px solid var(--rope-tan);
+        }
+
+        .checkpoint-marker {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background: var(--fire-orange);
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 0 0 4px var(--earth-brown);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Gallery - Scrapbook Style */
+        .scrapbook {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+            padding: 20px;
+            background: var(--parchment);
+            border: 10px solid var(--forest-dark);
+            position: relative;
+        }
+
+        .scrapbook::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border: 3px solid var(--earth-brown);
+            pointer-events: none;
+        }
+
+        .photo-card {
+            background: white;
+            padding: 15px 15px 40px 15px;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
+            transform: rotate(var(--rotation));
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .photo-card:nth-child(1) { --rotation: -3deg; }
+        .photo-card:nth-child(2) { --rotation: 2deg; }
+        .photo-card:nth-child(3) { --rotation: -2deg; }
+        .photo-card:nth-child(4) { --rotation: 3deg; }
+        .photo-card:nth-child(5) { --rotation: -1deg; }
+        .photo-card:nth-child(6) { --rotation: 2deg; }
+        .photo-card:nth-child(7) { --rotation: -2deg; }
+        .photo-card:nth-child(8) { --rotation: 1deg; }
+
+        .photo-card:hover {
+            transform: rotate(0deg) scale(1.1);
+            z-index: 100;
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .photo-pin {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background: var(--fire-orange);
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            filter: sepia(0.2);
+            transition: filter 0.3s;
+        }
+
+        .photo-card:hover img {
+            filter: sepia(0);
+        }
+
+        .photo-caption {
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.9rem;
+            color: var(--forest-dark);
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 90%;
+            border: 10px solid white;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .lightbox.active .lightbox-img {
+            transform: scale(1);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            font-family: 'Rye', serif;
+        }
+
+        /* Join Form - Wooden Board */
+        .wooden-board {
+            background: 
+                linear-gradient(135deg, rgba(139,90,43,0.9), rgba(160,82,45,0.9)),
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23bc6c25"/><path d="M0 0h100v2H0z" opacity=".1"/><path d="M0 20h100v2H0z" opacity=".1"/><path d="M0 40h100v2H0z" opacity=".1"/><path d="M0 60h100v2H0z" opacity=".1"/><path d="M0 80h100v2H0z" opacity=".1"/></svg>');
+            padding: 50px;
+            border-radius: 10px;
+            box-shadow: 
+                0 10px 30px rgba(0,0,0,0.3),
+                inset 0 0 100px rgba(0,0,0,0.2);
+            border: 10px solid var(--earth-brown);
+            position: relative;
+        }
+
+        .nail {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 30% 30%, silver, #333);
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .nail.tl { top: 10px; left: 10px; }
+        .nail.tr { top: 10px; right: 10px; }
+        .nail.bl { bottom: 10px; left: 10px; }
+        .nail.br { bottom: 10px; right: 10px; }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--cream);
+            font-family: 'Rye', serif;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 3px solid var(--rope-tan);
+            background: rgba(255,255,255,0.9);
+            font-family: 'Cabin', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--badge-gold);
+            box-shadow: 0 0 10px rgba(255,215,0,0.3);
+            transform: scale(1.02);
+        }
+
+        /* Footer - Campsite */
+        footer {
+            background: var(--forest-dark);
+            color: var(--cream);
+            padding: 60px 20px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fire-pit {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 100px;
+            opacity: 0.3;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .footer-section h4 {
+            font-family: 'Rye', serif;
+            color: var(--badge-gold);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .footer-section a {
+            color: var(--cream);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .footer-section a:hover {
+            color: var(--earth-light);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(255,255,255,0.1);
+            font-family: 'Courier Prime', monospace;
+            color: var(--earth-light);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .trail-nav {
+                display: none;
+            }
+            
+            .checkpoint:nth-child(odd) .checkpoint-content,
+            .checkpoint:nth-child(even) .checkpoint-content {
+                margin: 0 20px 0 60px;
+                text-align: left;
+                width: auto;
+            }
+            
+            .trail-line {
+                left: 30px;
+            }
+            
+            .checkpoint-marker {
+                left: 30px;
+            }
+
+            .cursor-compass {
+                display: none;
+            }
+        }
+
+        /* Parallax Elements */
+        .parallax-tree {
+            position: absolute;
+            font-size: 100px;
+            color: var(--forest-green);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        /* Animated Fireflies */
+        .firefly {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffff00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffff00;
+            animation: fly 10s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes fly {
+            0% { transform: translate(0, 0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translate(100px, -100px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div class="loader" id="loader">
+        <div class="loader-tent">
+            <div class="tent-flap left"></div>
+            <div class="tent-flap right"></div>
+        </div>
+        <div class="loader-text">Setting up camp...</div>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-compass" id="cursor"></div>
+
+    <!-- Navigation -->
+    <nav class="nav-container" id="navbar">
+        <div class="nav-content">
+            <a href="#" class="logo-main">
+                <div class="compass-logo"></div>
+                <div class="logo-text">
+                    ELITE CREW
+                    <span>University of Eldoret Scouts</span>
+                </div>
+            </a>
+            
+            <ul class="trail-nav">
+                <li><a href="#home">Basecamp</a></li>
+                <li><a href="#about">Heritage</a></li>
+                <li><a href="#activities">Trail</a></li>
+                <li><a href="#gallery">Memories</a></li>
+                <li><a href="#join">Enlist</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-bg" id="heroBg"></div>
+        
+        <!-- Fireflies -->
+        <div class="firefly" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
+        <div class="firefly" style="top: 60%; left: 80%; animation-delay: 2s;"></div>
+        <div class="firefly" style="top: 40%; left: 30%; animation-delay: 4s;"></div>
+        <div class="firefly" style="top: 80%; left: 60%; animation-delay: 6s;"></div>
+        
+        <div class="hero-content">
+            <div class="hero-badge"></div>
+            <h1 id="heroTitle">BE PREPARED</h1>
+            <div class="hero-rope"></div>
+            <p class="hero-subtitle">University of Eldoret • Elite Crew Scouts</p>
+            <div>
+                <a href="#join" class="btn-scout">Join The Adventure</a>
+                <a href="#gallery" class="btn-scout" style="background: transparent; border-color: var(--badge-gold);">View Gallery</a>
+            </div>
+        </div>
+        
+        <div class="scroll-indicator" onclick="document.getElementById('about').scrollIntoView({behavior: 'smooth'})">
+            <span>Explore the Trail</span>
+            <div class="knife-icon">🗡️</div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section section-parchment" id="about">
+        <div class="parallax-tree" style="top: 10%; right: 5%;">🌲</div>
+        <div class="parallax-tree" style="bottom: 20%; left: 5%;">🌲</div>
+        
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Heritage</h2>
+                <p class="section-subtitle">Since 1907 • Serving UoE Since 2003</p>
+            </div>
+            
+            <div class="rope-border" style="padding: 40px; background: white; margin: 40px 0;">
+                <div class="knot-corner tl"></div>
+                <div class="knot-corner tr"></div>
+                <div class="knot-corner bl"></div>
+                <div class="knot-corner br"></div>
+                
+                <p style="font-size: 1.2rem; line-height: 1.8; text-align: center; font-style: italic;">
+                    "The Scout Movement is a game for boys and girls under the leadership of adults, 
+                    based on the Scout Promise and Law, and aimed at developing young people physically, 
+                    intellectually, socially, and spiritually."
+                </p>
+                <p style="text-align: center; margin-top: 20px; color: var(--earth-brown); font-family: 'Rye', serif;">
+                    — Lord Baden-Powell
+                </p>
+            </div>
+            
+            <div class="badges-container">
+                <div class="scout-badge-card" data-aos="fade-up">
+                    <div class="tape"></div>
+                    <div class="badge-icon">🎯</div>
+                    <h3>Mission</h3>
+                    <p>To develop young people into responsible citizens and leaders through outdoor adventure and community service.</p>
+                </div>
+                
+                <div class="scout-badge-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="tape"></div>
+                    <div class="badge-icon">👁️</div>
+                    <h3>Vision</h3>
+                    <p>To be the leading youth movement in Kenya, creating a better world through education and empowerment.</p>
+                </div>
+                
+                <div class="scout-badge-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="tape"></div>
+                    <div class="badge-icon">⚜️</div>
+                    <h3>Promise</h3>
+                    <p>"On my honor, I promise to do my best, to do my duty to God and my country, to help other people at all times..."</p>
+                </div>
+            </div>
+            
+            <!-- Meeting Info - Styled as Map Coordinates -->
+            <div style="margin-top: 60px; text-align: center;">
+                <div class="rope-border" style="display: inline-block; padding: 30px 50px; background: var(--forest-green); color: var(--cream);">
+                    <div class="knot-corner tl"></div>
+                    <div class="knot-corner tr"></div>
+                    <div class="knot-corner bl"></div>
+                    <div class="knot-corner br"></div>
+                    
+                    <h3 style="font-family: 'Rye', serif; margin-bottom: 15px; color: var(--badge-gold);">📍 Rally Point</h3>
+                    <p style="font-family: 'Courier Prime', monospace; font-size: 1.2rem;">
+                        EVERY SUNDAY • 13:30 - 16:00 HRS<br>
+                        UNIVERSITY OF ELDORET FORESTRY GROUND
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Activities Section - Trail Map -->
+    <section class="section section-forest" id="activities">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" style="color: var(--cream);">The Scout Trail</h2>
+                <p class="section-subtitle" style="color: var(--earth-light);">Adventure • Skills • Service</p>
+            </div>
+            
+            <div class="trail-map">
+                <div class="trail-line"></div>
+                
+                <div class="checkpoint">
+                    <div class="checkpoint-marker">1</div>
+                    <div class="checkpoint-content">
+                        <h3 style="font-family: 'Rye', serif; color: var(--forest-green); margin-bottom: 10px;">🏕️ Camping & Survival</h3>
+                        <p>Master the art of outdoor living. Weekend expeditions, bushcraft skills, orienteering, and survival training in Kenya's diverse landscapes.</p>
+                    </div>
+                </div>
+                
+                <div class="checkpoint">
+                    <div class="checkpoint-marker">2</div>
+                    <div class="checkpoint-content">
+                        <h3 style="font-family: 'Rye', serif; color: var(--forest-green); margin-bottom: 10px;">🩺 First Aid & Safety</h3>
+                        <p>Comprehensive first aid certification, emergency response training, and disaster preparedness. Be ready to save lives.</p>
+                    </div>
+                </div>
+                
+                <div class="checkpoint">
+                    <div class="checkpoint-marker">3</div>
+                    <div class="checkpoint-content">
+                        <h3 style="font-family: 'Rye', serif; color: var(--forest-green); margin-bottom: 10px;">🌱 Environmental Conservation</h3>
+                        <p>Tree planting initiatives, plastic tide campaigns, and wildlife conservation projects. Protecting our planet for future generations.</p>
+                    </div>
+                </div>
+                
+                <div class="checkpoint">
+                    <div class="checkpoint-marker">4</div>
+                    <div class="checkpoint-content">
+                        <h3 style="font-family: 'Rye', serif; color: var(--forest-green); margin-bottom: 10px;">👥 Community Service</h3>
+                        <p>Blood donation drives, school outreach programs, and humanitarian projects. Making a tangible difference in our community.</p>
+                    </div>
+                </div>
+                
+                <div class="checkpoint">
+                    <div class="checkpoint-marker">5</div>
+                    <div class="checkpoint-content">
+                        <h3 style="font-family: 'Rye', serif; color: var(--forest-green); margin-bottom: 10px;">🎖️ Leadership Development</h3>
+                        <p>Public speaking, project management, team building, and mentorship programs. Forge the leaders of tomorrow.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section - Scrapbook -->
+    <section class="section section-parchment" id="gallery">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Adventure Log</h2>
+                <p class="section-subtitle">Captured Moments from the Trail</p>
+            </div>
+            
+            <div class="scrapbook" id="galleryContainer">
+                <!-- Photos will be loaded by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Join Section -->
+    <section class="section section-forest" id="join">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" style="color: var(--cream);">Enlist Today</h2>
+                <p class="section-subtitle" style="color: var(--earth-light);">Begin Your Scouting Journey</p>
+            </div>
+            
+            <div style="max-width: 600px; margin: 0 auto;">
+                <div class="wooden-board">
+                    <div class="nail tl"></div>
+                    <div class="nail tr"></div>
+                    <div class="nail bl"></div>
+                    <div class="nail br"></div>
+                    
+                    <form id="enlistForm">
+                        <div class="form-group">
+                            <label>Scout Name</label>
+                            <input type="text" placeholder="Enter your full name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Contact Signal (Email)</label>
+                            <input type="email" placeholder="your.email@example.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Field Number (Phone)</label>
+                            <input type="tel" placeholder="+254 XXX XXX XXX" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Unit Affiliation</label>
+                            <input type="text" placeholder="Course/Department (UoE Students)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Mission Statement</label>
+                            <textarea rows="4" placeholder="Why do you want to join the Elite Crew?"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn-scout" style="width: 100%; margin: 0;">
+                            Submit Application 🏕️
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Map Embed -->
+            <div style="margin-top: 60px; border: 10px solid var(--earth-brown); border-radius: 10px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.767276428209!2d35.288302!3d0.514442!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x178101991c6a2a0f%3A0x3b8f6c8e2a3f5a1d!2sUniversity%20of%20Eldoret!5e0!3m2!1sen!2ske!4v1699999999999!5m2!1sen!2ske" 
+                    width="100%" 
+                    height="400" 
+                    style="border:0; filter: sepia(0.3);" 
+                    allowfullscreen="" 
+                    loading="lazy">
+                </iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="fire-pit">
+            <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M100,20 Q120,50 100,80 Q80,50 100,20" fill="#ff6b35" opacity="0.8">
+                    <animate attributeName="d" values="M100,20 Q120,50 100,80 Q80,50 100,20;M100,20 Q130,40 100,90 Q70,40 100,20;M100,20 Q120,50 100,80 Q80,50 100,20" dur="2s" repeatCount="indefinite"/>
+                </path>
+                <path d="M100,30 Q115,55 100,75 Q85,55 100,30" fill="#ffd93d" opacity="0.9">
+                    <animate attributeName="d" values="M100,30 Q115,55 100,75 Q85,55 100,30;M100,30 Q125,50 100,85 Q75,50 100,30;M100,30 Q115,55 100,75 Q85,55 100,30" dur="1.5s" repeatCount="indefinite"/>
+                </path>
+            </svg>
+        </div>
+        
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>ELITE CREW</h4>
+                <p>University of Eldoret Scouts Movement</p>
+                <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">Building character, fostering leadership, and serving communities since 2003.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="#home">Basecamp</a>
+                <a href="#about">Heritage</a>
+                <a href="#activities">The Trail</a>
+                <a href="#gallery">Memories</a>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Contact Patrol</h4>
+                <a href="mailto:scouts@uoeldoret.ac.ke">scouts@uoeldoret.ac.ke</a>
+                <a href="tel:+254108455391">+254 104 455 391</a>
+                <p style="margin-top: 15px; font-family: 'Courier Prime', monospace;">
+                    Sundays: 1330-1600 Hrs<br>
+                    Forestry Ground, UoE
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>© 2026 University of Eldoret ELITE CREW. All Rights Reserved.</p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">Be Prepared • Service • Leadership</p>
+        </div>
+    </footer>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <img class="lightbox-img" id="lightboxImg" src="" alt="Gallery Image">
+    </div>
+
+    <script>
+        // Loading Screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('open');
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                }, 1000);
+            }, 1500);
+        });
+
+        // Custom Cursor
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 20 + 'px';
+            cursor.style.top = e.clientY - 20 + 'px';
+        });
+
+        // Navigation Scroll Effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Parallax Hero
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const heroBg = document.getElementById('heroBg');
+            const heroTitle = document.getElementById('heroTitle');
+            
+            if (heroBg) {
+                heroBg.style.transform = `translateY(${scrolled * 0.5}px)`;
+            }
+            if (heroTitle) {
+                heroTitle.style.transform = `translateY(${scrolled * 0.3}px)`;
+            }
+        });
+
+        // Gallery Photos
+        const galleryImages = [
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297277/IMG-20260315-WA0389_rwl0rp.jpg', caption: 'Leadership Camp 2026' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297265/IMG-20260315-WA0242_empswv.jpg', caption: 'Community Service Day' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297263/IMG-20260315-WA0119_r7ggm3.jpg', caption: 'Scout Promise Ceremony' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297262/IMG-20260315-WA0303_fivch5.jpg', caption: 'First Aid Training' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297258/IMG-20260315-WA0379_o9plsx.jpg', caption: 'Hiking Expedition' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297250/IMG-20260315-WA0108_nxt1wh.jpg', caption: 'Campfire Stories' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297245/IMG-20260315-WA0052_rdhgml.jpg', caption: 'Knot Tying Workshop' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297245/IMG-20260315-WA0015_wj0pyd.jpg', caption: 'Recruitment Drive' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297241/IMG-20260315-WA0045_w1nwuf.jpg', caption: 'Skills Training' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297236/IMG-20260315-WA0159_z7esj2.jpg', caption: 'Environmental Project' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297232/IMG-20260315-WA0012_j498ny.jpg', caption: 'Patrol Leaders Meeting' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297219/IMG-20260315-WA0426_h49f6c.jpg', caption: 'Award Ceremony' },
+            { url: 'https://res.cloudinary.com/dutme5k4r/image/upload/v1774297224/IMG-20260316-WA0008_yhm5id.jpg', caption: 'The poster' }
+        ];
+
+        const galleryContainer = document.getElementById('galleryContainer');
+        
+        galleryImages.forEach((img, index) => {
+            const card = document.createElement('div');
+            card.className = 'photo-card';
+            card.innerHTML = `
+                <div class="photo-pin"></div>
+                <img src="${img.url}" alt="${img.caption}" loading="lazy" onclick="openLightbox('${img.url}')">
+                <div class="photo-caption">${img.caption}</div>
+            `;
+            galleryContainer.appendChild(card);
+        });
+
+        // Lightbox Functions
+        function openLightbox(url) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightboxImg');
+            lightboxImg.src = url;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close lightbox on background click
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeLightbox();
+            }
+        });
+
+        // Form Submission
+        document.getElementById('enlistForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Create a temporary "badge earned" notification
+            const badge = document.createElement('div');
+            badge.innerHTML = '🏕️ Application Submitted!';
+            badge.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--forest-green);
+                color: var(--cream);
+                padding: 30px 50px;
+                border-radius: 10px;
+                font-family: 'Rye', serif;
+                font-size: 1.5rem;
+                z-index: 10001;
+                border: 5px solid var(--badge-gold);
+                box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                animation: badgePop 0.5s ease;
+            `;
+            
+            document.body.appendChild(badge);
+            
+            setTimeout(() => {
+                badge.remove();
+                e.target.reset();
+            }, 3000);
+        });
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Animate sections on scroll
+        gsap.utils.toArray('.section').forEach((section, i) => {
+            gsap.from(section.querySelectorAll('.section-title, .section-subtitle'), {
+                scrollTrigger: {
+                    trigger: section,
+                    start: 'top 80%',
+                    toggleActions: 'play none none reverse'
+                },
+                y: 50,
+                opacity: 0,
+                duration: 1,
+                stagger: 0.2
+            });
+        });
+
+        // Animate checkpoint markers
+        gsap.utils.toArray('.checkpoint').forEach((checkpoint, i) => {
+            gsap.from(checkpoint, {
+                scrollTrigger: {
+                    trigger: checkpoint,
+                    start: 'top 80%',
+                    toggleActions: 'play none none reverse'
+                },
+                opacity: 0,
+                x: i % 2 === 0 ? -50 : 50,
+                duration: 0.8
+            });
+        });
+
+        // Animate badge cards
+        gsap.utils.toArray('.scout-badge-card').forEach((card, i) => {
+            gsap.from(card, {
+                scrollTrigger: {
+                    trigger: card,
+                    start: 'top 85%',
+                    toggleActions: 'play none none reverse'
+                },
+                y: 100,
+                opacity: 0,
+                rotation: i % 2 === 0 ? -10 : 10,
+                duration: 0.8,
+                delay: i * 0.1
+            });
+        });
+
+        // Animate gallery photos
+        gsap.utils.toArray('.photo-card').forEach((card, i) => {
+            gsap.from(card, {
+                scrollTrigger: {
+                    trigger: card,
+                    start: 'top 90%',
+                    toggleActions: 'play none none reverse'
+                },
+                scale: 0,
+                opacity: 0,
+                duration: 0.6,
+                delay: i * 0.05,
+                ease: 'back.out(1.7)'
+            });
+        });
+
+        // Add keyframe for badge pop
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes badgePop {
+                0% { transform: translate(-50%, -50%) scale(0); }
+                50% { transform: translate(-50%, -50%) scale(1.2); }
+                100% { transform: translate(-50%, -50%) scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
